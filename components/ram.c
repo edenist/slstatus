@@ -191,11 +191,19 @@
 
 	const char *
 	ram_perc(void) {
-		long npages;
-		long active;
-		size_t len;
+		int npages;
+		int active;
+        int inactive;
+        int wired;
+        int page_size;
+        long ARC_total;
+        long total_mem;
+        long used_mem;
+
+		size_t len, len_long;
 
 		len = sizeof(npages);
+        len_long = sizeof(ARC_total);
 		if (sysctlbyname("vm.stats.vm.v_page_count", &npages, &len, NULL, 0) == -1
 				|| !len)
 			return NULL;
@@ -204,7 +212,26 @@
 				|| !len)
 			return NULL;
 
-		return bprintf("%d", active * 100 / npages);
+		if (sysctlbyname("vm.stats.vm.v_inactive_count", &inactive, &len, NULL, 0) == -1
+				|| !len)
+			return NULL;
+
+		if (sysctlbyname("vm.stats.vm.v_wire_count", &wired, &len, NULL, 0) == -1
+				|| !len)
+			return NULL;
+
+		if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == -1
+				|| !len)
+			return NULL;
+
+		if (sysctlbyname("kstat.zfs.misc.arcstats.size", &ARC_total, &len_long, NULL, 0) == -1
+				|| !len_long)
+			return NULL;
+
+        total_mem = npages * page_size;
+        used_mem  = ((active + inactive + wired) * page_size) - ARC_total;
+
+		return bprintf("%d",  used_mem * 100 / total_mem);
 	}
 
 	const char *
