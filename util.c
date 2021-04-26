@@ -5,10 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libnotify/notify.h>
 
 #include "util.h"
 
 char *argv0;
+int notify_latch = 0;
 
 static void
 verr(const char *fmt, va_list ap)
@@ -143,4 +145,15 @@ pscanf(const char *path, const char *fmt, ...)
 	fclose(fp);
 
 	return (n == EOF) ? -1 : n;
+}
+
+int
+notify(char *str_summary, size_t size_summary, char *str_body, size_t size_body)
+{
+    notify_init (str_summary);
+	NotifyNotification * NewAlert = notify_notification_new (str_summary, str_body, "dialog-information");
+	notify_notification_show (NewAlert, NULL);
+	g_object_unref(G_OBJECT(NewAlert));
+	notify_uninit();
+	return 1;
 }

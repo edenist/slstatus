@@ -32,6 +32,9 @@ all: slstatus
 $(COM:=.o): config.mk $(REQ:=.h)
 slstatus.o: slstatus.c slstatus.h arg.h config.h config.mk $(REQ:=.h)
 
+$(REQ:=.o):
+	$(CC) -o $@ -c $(CPPFLAGS) $(EXTRA_INC) $(CFLAGS) $(EXTRA_FLAGS) $<
+  
 .c.o:
 	$(CC) -o $@ -c $(CPPFLAGS) $(CFLAGS) $<
 

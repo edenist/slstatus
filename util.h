@@ -14,3 +14,4 @@ int esnprintf(char *str, size_t size, const char *fmt, ...);
 const char *bprintf(const char *fmt, ...);
 const char *fmt_human(uintmax_t num, int base);
 int pscanf(const char *path, const char *fmt, ...);
+int notify(char *str_summary, size_t size_summary, char *str_body, size_t size_body);

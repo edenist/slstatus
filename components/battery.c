@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../util.h"
+#include "battery.h"
 
 #if defined(__linux__)
 	#include <limits.h>
@@ -198,6 +199,8 @@
 #elif defined(__FreeBSD__)
 	#include <sys/sysctl.h>
 
+    extern int notify_latch;
+
 	const char *
 	battery_perc(const char *unused)
 	{
@@ -208,6 +211,23 @@
 		if (sysctlbyname("hw.acpi.battery.life", &cap, &len, NULL, 0) == -1
 				|| !len)
 			return NULL;
+        
+        /* If battery is below threshold, trigger notification */
+        if (cap <= LOWBAT && !notify_latch) {
+            char summary[] = "Low battery!";
+            size_t len_summary;
+            char body[] = "Battery at 5% capacity. Plug in ASAP";
+            size_t len_body;
+            len_summary = sizeof(summary);
+            len_body = sizeof(body);
+            /* Set a latch to prevent further notifications */
+            if (notify(summary, len_summary, body, len_body)) {
+                notify_latch = 1;
+            }
+        /* If battery is over threshold [due to charging], reset the latch */
+        } else if (cap > LOWBAT && notify_latch) {
+            notify_latch = 0;
+        } 
 
 		return bprintf("%d", cap);
 	}
